@@ -1,0 +1,111 @@
+Asp.Net Core Best Practises
+
+=> Http method tipi seçimi (API)(Client istek yaparken best practises)
+	- Get (Serverdan data almak için, Örneðin client id=1 olan ürünleri istediðinde get isteði yapmalýdýr.)
+	- Post (Yeni nesne kayýt iþlemleri için kullanýlmalýdýr.)
+	- Put (Nesne güncelleme iþlemleri için kullanýlmalýdýr.Best practise Put olmalýdýr.)
+	- Delete (Nesne silme iþlemleri için kullanýlmalýdýr.)
+
+=> Doðru Api/Endpoint yapýsý (Best Practises)
+	-Method-Get Doðru: Myapi.com/api/products / Yanlýþ: Myapi.com/api/getproduct
+	-Method-Get Doðru: Myapi.com/api/products/10 / Yanlýþ: Myapi.com/api/getproductbyId/10
+	-Method-Post Doðru: Myapi.com/api/products / Yanlýþ: Myapi.com/api/product/saveproduct
+	-Method-Put Doðru: Myapi.com/api/products / Yanlýþ: Myapi.com/api/product/updateproduct
+	-Method-Delete Doðru: Myapi.com/api/products/2 / Yanlýþ: Myapi.com/api/product/deleteproduct
+
+=> Doðru Http Cevap Durum Kodlarý
+	-100 information responses (Bilgilendirici cevaplar)
+	-200 successful responses (Client isteði baþarýlý)
+		-200 ok
+		-201 created
+		-204 NoContent
+	-300 redirect messages (Yönlendirici mesajlar / Baþka bir endpointe yönlendiriyordur)
+	-400 client error responses (Client tarafýndan hatalý bir istek gönderilmiþse)
+		-400 Bad Request
+		-401 Unauthorizes
+		-403 Forbid
+		-404 NotFound
+	-500 server error responses (Veri tabaný hatalarý ile alakalý durum kodlarýdýr)
+		-500 internat server error
+
+=> Doðru endpoint url yapýsý
+	- Get https://myapi.com/categories/2/products --> Doðru (Parent-child iliþkisi)
+	- Get https://myapi.com/categories/2/products/5 --> Yanlýþ (Endpointin asýl amacý kategori ile iþlem yapmak.)
+	- Get https://myapi.com/products/5 --> Doðru (Id'si 5 olan ürün isteniyorsa product tarafýnda yapýlmalýdýr istek)
+
+=> Request içerisinde ayný propety'i almaktan kaçýnýn
+	[HttpPut("{id}")]
+	Public IActionResult Update(Product product,int id) => burada hem id alýyoruz hem de product içinde id var o sebeple best practise aþaðýda
+	{
+		//Güncelleme iþlemleri
+	}
+
+	[HttpPut] //Best Practises olarak doðru yöntem
+	Public IActionResult Update(Product product) => id'yi product nesnesi üzerinden alabiliriz.
+	{
+		//Güncelleme iþlemleri
+	}
+
+=> Asp.net Core uygulamanýn startup.cs dosyasýný mümkün olduðunca sade býrak (IServiceCollection üzerinden extension metot oluþturup ilgili katmanda kullanýlmalýdýr.)
+	-public void ConfigureServices (IServiceCollection services) - Servisleri implemente ettiðimiz
+	-public void Configure (IApplicationBuilder app,IWebHostEnvironment env) -Katmanlarý eklediðimiz yer
+
+=> Uygulamanýzý münkün oldukça küçük parçalara böl
+	-MySite.Web => web uygulamasý
+	-MySite.API => api uygulamasý
+	-MySite.Core => class library
+	-MySite.Data => class library
+	-MySite.Service => class library
+	-MySite.Logging => class library
+
+=> Controller sýnýflarýnýnz mümkün oldukça temiz tutun. Business kodu bulundurmayýn.
+=> Action methodlarýnýzý mümkün oldukça temiz tutun. Business kodu bulundurmayýn.
+=> Hatalarý global olarak ele alýn. Action methodlar içerisinde try catch bloklarý kullanmayýn.
+=> Tekrar eden kodlardan kaçmak için filter kullan.
+=> Action methodlardan direk olarak model sýnýflarýnýzý dönmeyin. Ýlgili modellerin DTO(Data Transfer Object) sýnýflarýný dönün.
+	-Mapster,Automapper gibi kütüphaneler ile dönüþtürebiliriz.
+
+=> Neden Entity - Veritabanýnda karþýlýðý bulunan tablolar mevcutsa bunlara Entity denir.
+
+=> Interfaceler sözleþme yani kontratlarýn tanýmlandýðý yerlerdir.
+
+=> Classlarýn default eriþim belirleyicisi Internal, class içerisindeki metotlarýn ise private'dýr.
+
+=> .Net 6 ile default olarak gelen özellik "Nullable". Uygulamada null hatalarýný engellemek için kodlama   esnasýnda muhtemel null olabilecek yerleri gösterir. Nullable check özelliðini kapatmak için iki yöntem var 1.Yöntem - Nullable olabilecek objeyi seçip sýrasýyla "Suppress or Configure issues"-"Configure CS8618 severity"-"Suggestion" bu "editorconfig adýnda bir dosya oluþturup ayarý kaydeder." 2.Yöntem Core-properties-general-nullable-disable.
+
+=> IQueryable tipi Database'e direkt sorgu göndermez. Where,OrderBy gibi sorgularý yapýp en son ToList veya ToListAsync dediðimiz anda veritabanýna sorgu atar. O ana kadar bellekte tutulur.
+
+=> Unit of Work - SaveChange methotunu kontrollü çaðýrmak için ayrý bir katmanda oluþturulur. Her repository iþleminden sonra SaveChange çaðýrmak yerine bunlarý toplu þekilde Unit Of Work Interface'i ile yapýlýr.
+
+=> AutoMapper (entity<>dto) en çok kullanýlan mapperlardan biridir. Görevi entity'i dto'ya dto'yu da entity'e map iþlemini yapmaya yarar.
+
+=> Fluent Validation için "FluentValidation.AspNetCore" paketini BLL yani Service katmanýna yüklüyoruz.
+
+=> Filter kullanýmý Action öncesi veya sonrasý,methotlara gelen request gelmeden önce veya geldikten sonra gibi durumlarda müdahale edebilmemizi saðlamaktadýr.
+
+=>Middleware araþtýrýlacak
+=>Client'tan gelen Request'e karþýlýk Response'a kadar farklý iþlemler gerçekleþtirmek ve sürecin gidiþatýna yön vermek için "Middleware" larý kullanýyoruz. Request ile Response arasýndaki farklý iþlemler middleware'dir yani ara yazýlýmlar. Middleware'ler use adýyla baþlar. Core çekirdeðinde gelen hazýr middlewareler=>
+	-Run Metodu => Run fonksiyonu kendisinden sonra gelen middleware'i tetiklemez ve akýþý keser. Bu etkiye Short Circuit(Kýsa Devre)
+	-Use Metodu => Devreye girdikten sonra süreçte sýraki middleware'i çaðýrmakta ve normal middleware iþlevi bittikten sonra geriye dönüp devam edebilen bir yapýya sahiptir.
+	-Map Metodu => Middleware'i talep gönderen path'e göre filtrelemek isteyebiliriz. Bunun için Use ya da Run fonksiyonlarýnda if kontrolü saðlayabilir yahut Map metodu ile daha profesyonel iþlem yapabiliriz.
+	-MapWhen Metodu => Map metodu ile sadece request'in yapýldýðý path'e göre filtreleme yapýlýrken, MapWhen metodu ile gelen request'in herhangi bir özelliðine göre bir filtreleme iþlemi gerçekleþtirilebilir.
+
+=>AutoFac
+	-Asp.net Core : BUilt-in DI Container => ASp.net ile hazýr olarak gelen containerdýr. (Constructor injection var,metot injection var)
+	-AutoFac bu da IOC Containerdýr. Bize .net ile sunulan containera ek olarak baþka özellikleri de vardýr. (ek olarak property injection var,Dinamik olarak DI containera nesne ekleme özelliði var.(Örneðin git þu assemblylerden sonu repository ile biten tüm interfaceleri ekle ve buna karþýlýk gelen sýnýflarý da ekle diyebiliyoruz.))
+
+=> CachingService (in-memory caching)
+	-Datalarý cashleyeceðiz bu sayede bize clientlardan bir istek geldiðinde önce cash de var mý yok mu kontrol edeceðiz eðer cash de var ise cashden döneceðiz. Cash de yok ise datayý repo dan çekip cashleyip o þekilde döneceðiz.
+
+=> Analyze -> Code Cleanup -> Run Code CleanUp (Profile 1) ara ara çalýþtýrmak lazým gereksiz boþluk vs. temizlik yapýyor.
+
+-------------------------------------------------------------------------
+
+=>Assembly kullanýmý araþtýrýlacak
+
+=>Filter kullanýmý araþtýrýlacak
+
+=>Cache leme nedir?
+
+
+-------------------------------------------------------------------------
